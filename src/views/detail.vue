@@ -13,7 +13,7 @@
                 		{{topic.create_at | formatDate}}•<span>{{topic.visit_count}}次浏览</span>
                 	</p>
             	</div>
-            	<a href="javascript:;" class="btn-keep" v-if="topic.is_collect === false" @click="keepTopic(topic.id)">收藏</a>
+            	<a href="javascript:;" class="btn-keep" v-if="!topic.is_collect" @click="keepTopic(topic.id)">收藏</a>
             	<a href="javascript:;" class="btn-keep on" v-else @click="cancelTopic(topic.id)">取消收藏</a>
             </div>
             <div class="detail-title">{{topic.title}}</div>
@@ -40,195 +40,57 @@
 	    <div class="loading-wrapper" v-if="loading">
 	    	<loading></loading>
 	    </div>
-	    <modal :showModal="showModal" v-on:close="closeMoal"></modal>
+	    <modal></modal>
 	</div>
 </template>
 
 <script>
 	import loading from '../components/loading.vue';
 	import modal from '../components/modal.vue';
-	import reqwest from 'reqwest';
-	import api from '../fetch/api.js';
-	var collect_url = api.getCollect();
-	var del_collect_url = api.getDelCollect();
-	var accesstoken = localStorage.getItem('accesstoken');
-	var userInfo = JSON.parse(localStorage.getItem('userInfo')) || {};
-	var userID = userInfo.id;
-	var userName = userInfo.loginname;
-	var userHead = userInfo.avatar_url;
+	import { mapGetters, mapActions } from 'vuex';
 
 	export default {
-		data () {
-			return {
-				showModal: false,
-				loading: false,
-				topic: {
-					author: {},
-					replies: [
-						{
-							author: {
-								avatar_url: '',
-								loginname: ''
-							},
-							ups: [],
-							id: '',
-							create_at: '',
-							content: ''
-						}
-					]
-				},
-				userReply: ''
-			}
-		},
 		components: {
 			loading,
 			modal
 		},
-		created () {
+		beforeRouteEnter (to, from, next) {
+			next(vm => {
+				vm.getData();
+			});
+		},
+		/*created () {
 			this.getData();
+		},*/
+		computed: {
+			...mapGetters(['topic', 'showModal', 'loading']),
+			userReply: {
+				get () {
+					return this.$store.state.detail.userReply;
+				},
+				set (value) {
+					this.$store.commit('UPDATE_REPLY', value);
+				}
+			}
 		},
 		methods: {
+			...mapActions(['getTopic', 'setKeep', 'cancelKeep', 'getGood', 'setReply']),
 			getData () {
-				let self = this;
+				window.scrollTo(0,0);
 				let id = this.$route.params.id;
-				let url = api.getTopicById(id);
-				this.loading = true;
-				reqwest({
-					url: url,
-					method: 'get',
-					data: {
-						accesstoken: accesstoken
-					}
-				})
-				.then(function(res){
-					console.log(res);
-					let data = res.data;
-					self.topic = data;
-					self.loading = false;
-				})
-				.fail(function(err){
-					console.log(err);
-				});
+				this.getTopic(id);
 			},
 			keepTopic (id) {
-				let self = this;
-				let flag = this.getUserLog();
-				if (flag) {
-					reqwest({
-						url: collect_url,
-						method: 'post',
-						data: {
-							accesstoken: accesstoken,
-							topic_id: id
-						}
-					})
-					.then(res => {
-						console.log(res);
-						self.topic.is_collect = true;
-					})
-					.fail(err => {
-						console.log(err);
-					});
-				}else {
-					this.showModal = true;
-				}
+				this.setKeep(id);
 			},
 			cancelTopic (id) {
-				let self = this;
-				reqwest({
-					url: del_collect_url,
-					method: 'post',
-					data: {
-						accesstoken: accesstoken,
-						topic_id: id
-					}
-				})
-				.then(res => {
-					console.log(res);
-					self.topic.is_collect = false;
-				})
-				.fail(err => {
-					console.log(err);
-				});
+				this.cancelKeep(id);
 			},
 			goodFor (id, index) {
-				let self = this;
-				let reply = this.topic.replies[index];
-				let ups = this.topic.replies[index].ups;
-				let url = api.getUp(id);
-				let flag = this.getUserLog();
-				if (flag) {
-					reqwest({
-						url: url,
-						method: 'post',
-						data: {
-							accesstoken: accesstoken
-						}
-					})
-					.then(res => {
-						console.log(res);
-						if(res.action == 'up'){
-							ups.push(userID);
-							reply.is_uped = true;
-						}else {
-							ups.pop(userID);
-							reply.is_uped = false;
-						}						
-					})
-					.fail(err => {
-						console.log(err);
-					});
-				}else {
-					this.showModal = true;
-				}
-			},
-			getUserLog () {
-				let flag = Boolean(localStorage.getItem('loginStatus'));
-				return flag;
-			},
-			closeMoal () {
-				this.showModal = false;
+				this.getGood({id: id, index: index});
 			},
 			postReply (id) {
-				let self = this;
-				let flag = this.getUserLog();
-				let url = api.getReply(id);
-				let replyContent = this.userReply;
-				if (flag) {
-					if (replyContent !== ''){
-						reqwest({
-							url: url,
-							method: 'post',
-							data: {
-								accesstoken: accesstoken,
-								content: replyContent
-							}
-						})
-						.then(res => {
-							console.log(res);
-							let _id = res.reply_id;
-							let obj = {
-								id: _id,
-								author: {
-									avatar_url: userHead,
-									loginname: userName
-								},
-								create_at: new Date().getTime(),
-								content: replyContent,
-								ups: []
-							};
-							self.topic.replies.push(obj);
-							self.userReply = '';
-						})
-						.fail(err => {
-							console.log(err);
-						})
-					}else {
-						alert('评论内容不能为空！');
-					}
-				}else {
-					this.showModal = true;
-				}
+				this.setReply({id: id, content: this.userReply});
 			}
 		}
 	}

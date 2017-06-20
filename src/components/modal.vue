@@ -1,6 +1,6 @@
 <template>
-	<div class="modal-box" v-show="showModal" @click="close">
-		<div id="mask"></div>
+	<div class="modal-box" v-show="showModal">
+		<div id="mask" @click="close"></div>
 		<div class="modal-wrapper" id="modal">
 		    <div class="modal-head">消息</div>
 		    <div class="modal-body">
@@ -15,15 +15,18 @@
 </template>
 
 <script>
+	import { mapGetters } from 'vuex';
+
 	export default {
-		props: {
-			showModal: false
+		computed: {
+			...mapGetters(['showModal'])
 		},
 		methods: {
 			close () {
-				this.$emit('close');
+				this.$store.commit('GET_MODAL', false);
 			},
 			toLogin () {
+				this.$store.commit('GET_MODAL', false);
 				this.$router.push({path: '/login'});
 			}
 		}

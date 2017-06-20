@@ -6,6 +6,7 @@
 	        <option value="share">share</option>
 	        <option value="ask">ask</option>
 	        <option value="job">job</option>
+	        <option value="dev">dev</option>
 	    </select>
 	    <textarea name="" id="content" class="content" placeholder="请输入内容" v-model="content"></textarea>
 	    <div class="create-btn">
@@ -15,16 +16,14 @@
 </template>
 
 <script>
-	import reqwest from 'reqwest';
-	import api from '../fetch/api.js';
-	var url = api.getTopics();
+	import axios from 'axios';
 	var accesstoken = localStorage.getItem('accesstoken');
 
 	export default {
 		data () {
 			return {
 				title: '',
-				tab: '分享',
+				tab: 'dev',
 				content: ''
 			}
 		},
@@ -32,8 +31,8 @@
 			sendPost () {
 				var self = this;
 				if (this.title !== '' && this.content !== ''){					
-					reqwest({
-						url: url,
+					axios({
+						url: 'https://cnodejs.org/api/v1/topics',
 						method: 'post',
 						data: {
 							accesstoken: accesstoken,
@@ -46,7 +45,7 @@
 						console.log(res);
 						self.$router.push('/');
 					})
-					.fail(err => {
+					.catch(err => {
 						console.log(err);
 					});
 				}else {

@@ -6,14 +6,17 @@
 </template>
 
 <script>
-	var userInfo = JSON.parse(localStorage.getItem('userInfo')) || {};
-	var name = userInfo.loginname;
+	import { mapGetters } from 'vuex';
 
 	export default {
+		computed: {
+			...mapGetters(['userInfo'])
+		},
 		methods: {
 			enterUser () {
+				var name = this.userInfo.loginname;
 				if (!name) {
-					this.$router.push('/login');
+					this.$router.push('/login');					
 				}else {
 					this.$router.push({name: 'my', params: {loginname: name}});
 				}

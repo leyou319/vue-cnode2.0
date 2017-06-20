@@ -1,30 +1,43 @@
+import axios from 'axios';
+import qs from 'qs';
 
-// api 路径
-const HOST = 'https://cnodejs.org/api/v1';
+axios.defaults.baseURL = 'https://cnodejs.org/api/v1';
+axios.defaults.transformRequest[0] = function(data) {
+	data = qs.stringify(data);
+	return data;
+}
 
 export default {
-	getTopics () {
-		return HOST + '/topics';
+	//获取文章列表
+	getTopics (params) {
+		return axios.get(`/topics?${params}`);
 	},
-	getTopicById (id) {
-		return HOST + '/topic/' + id;
+	//获取文章详情
+	getTopicById (params = {id: '', accesstoken: ''}) {
+		return axios.get(`/topic/${params.id}?accesstoken=${params.accesstoken}`);
 	},
-	getLogin () {
-		return HOST + '/accesstoken';
+	//登录
+	getLogin (params = {accesstoken: ''}) {
+		return axios.post('/accesstoken', {accesstoken: params.accesstoken});
 	},
-	getCollect () {
-		return HOST + '/topic_collect/collect';
+	//收藏
+	getCollect (params = {id: '', accesstoken: ''}) {
+		return axios.post(`/topic_collect/collect`, {accesstoken: params.accesstoken, topic_id: params.id});
 	},
-	getDelCollect () {
-		return HOST + '/topic_collect/de_collect';
+	//取消收藏
+	getDelCollect (params = {id: '', accesstoken: ''}) {
+		return axios.post(`/topic_collect/de_collect`, {accesstoken: params.accesstoken, topic_id: params.id});
 	},
-	getUp (id) {
-		return HOST + '/reply/' + id + '/ups';
+	//点赞
+	getUp (params = {id: '', accesstoken: ''}) {
+		return axios.post(`/reply/${params.id}/ups`, {accesstoken: params.accesstoken});
 	},
-	getReply (id) {
-		return HOST + '/topic/' + id + '/replies';
+	//回复评论
+	getReply (params = {id: '', accesstoken: '', content: ''}) {
+		return axios.post(`/topic/${params.id}/replies`, {accesstoken: params.accesstoken, content: params.content});
 	},
+	//用户详情
 	getUser (name) {
-		return HOST + '/user/' + name;
+		return axios.get(`/user/${name}`);
 	}
 }

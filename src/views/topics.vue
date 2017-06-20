@@ -33,32 +33,10 @@
 
 <script>
 	import footerSection from '../components/footer.vue';
-	import loading from '../components/loading.vue';
-	import reqwest from 'reqwest';
-	import api from '../fetch/api.js';
-	var url = api.getTopics();
+	import loading from '../components/loading.vue';	
+    import { mapGetters, mapActions } from 'vuex';
 
 	export default {
-		data () {
-			return {
-				initIndex: 0,
-				tabItem: [
-					{ title: '全部', type: 'all'},
-					{ title: '精华', type: 'good'},
-					{ title: '分享', type: 'share'},
-					{ title: '问答', type: 'ask'},
-					{ title: '招聘', type: 'job'}
-				],
-				topics: [], //文章列表数据
-				searchKey: { //文章列表参数
-					tab: 'all',
-					page: 1,
-					limit: 10
-				},
-				noData: false,
-				loading: false
-			}
-		},
 		components: {
 			loading,
 			footerSection
@@ -73,57 +51,26 @@
 			next();
 		},
 		created () {
-			this.changeTab(0, 'all');			
+			if (this.topics.length == 0) {
+				this.getTopics();			
+			}
+		},
+		computed: {
+			...mapGetters(['initIndex', 'tabItem', 'loading', 'noData', 'topics'])
 		},
 		methods: {
+			...mapActions(['getTopics']),
 			changeTab (index, type) {
-				let self = this;
-				this.loading = true;
-				this.initIndex = index;
-				this.topics = [];
-				this.searchKey.page = 0;
-				this.searchKey.tab = type;
-				reqwest({
-					url: url + `?tab=${this.searchKey.tab}&page=${this.searchKey.page}&limit=${this.searchKey.limit}`,
-					method: 'get'
-				})
-				.then(res => {
-					console.log(res);
-					let data = res.data;
-					self.topics = data;
-					self.loading = false;
-				})
-				.fail(err => {
-					console.log(err);
-				});
+				window.scroll(0, 0);
+				this.$store.commit('COM_INIT_INDEX', index);
+				this.$store.commit('GET_SEARCH_KEY', {page: 0, tab: type, limit: 10});
+				this.getTopics();
 			},
 			loadMore () {
 				var totalHeight = window.innerHeight + window.scrollY;
 				var docHeight = document.body.clientHeight;
-				var self = this;
 				if (totalHeight == docHeight) {
-					console.log('已经到达底部');
-					this.loading = true;
-					this.searchKey.page++;
-					reqwest({
-						url: url + `?tab=${this.searchKey.tab}&page=${this.searchKey.page}&limit=${this.searchKey.limit}`,
-						method: 'get'
-					})
-					.then(res => {
-						console.log(res);
-						let data = res.data;
-						let len = data.length;
-						if (len == 0) {
-							self.noData = true;
-							self.loading = false;
-						}else {
-							self.topics = self.topics.concat(data);
-							self.loading = false;
-						}
-					})
-					.fail(err => {
-						console.log(err);
-					});
+					this.getTopics();
 				}
 			}
 		}

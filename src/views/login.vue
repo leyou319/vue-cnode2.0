@@ -9,41 +9,27 @@
 </template>
 
 <script>
-	import reqwest from 'reqwest';
-	import api from '../fetch/api.js';
-	var url = api.getLogin();
+	import { mapGetters, mapActions } from 'vuex';
 
 	export default {
-		data () {
-			return {
-				accesstoken: ''
+		computed: {
+			accesstoken: {
+				get () {
+					return this.$store.state.user.accesstoken;
+				},
+				set (value) {
+					this.$store.commit('UPDATEVAL', value);
+				}
 			}
 		},
 		methods: {
+			...mapActions(['getUserInfo']),
 			signIn () {
-				if (this.accesstoken == '') {
-					alert('Token不能为空');
+				if (!this.accesstoken) {
+					alert('Token不能为空');					
 				}else {
-					var self = this;
-					reqwest({
-						url: url,
-						method: 'post',
-						data: {
-							accesstoken: self.accesstoken
-						}
-					})
-					.then(res => {
-						console.log(res);
-						localStorage.setItem('accesstoken', self.accesstoken);
-						localStorage.setItem('loginStatus', true);
-						localStorage.setItem('userInfo', JSON.stringify(res));
-						self.$router.go(-1);
-					})
-					.fail(err => {
-						console.log(err);
-						alert('没有该用户！');	
-						self.accesstoken = '';					
-					});
+					var router = this.$router;
+					this.getUserInfo(router);
 				}
 			}
 		}

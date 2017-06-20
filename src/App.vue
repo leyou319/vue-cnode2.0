@@ -1,7 +1,11 @@
 <template>
 	<div id="app">
 		<header-section :showBack="showBack"></header-section>
-		<router-view></router-view>
+		<transition name="fade" mode="out-in">			
+			<keep-alive>
+				<router-view></router-view>			
+			</keep-alive>
+		</transition>	
 	</div>
 </template>
 
@@ -39,5 +43,11 @@
 </script>
 
 <style lang="scss">
-	@import './assets/sass/reset.scss';	
+	@import './assets/sass/reset.scss';
+	.fade-enter-active, .fade-leave-active {
+		transition: opacity .2s ease;
+	}
+	.fade-enter, .fade-leave-active {
+		opacity: 0
+	}	
 </style>

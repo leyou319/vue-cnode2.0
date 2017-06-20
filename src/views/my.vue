@@ -29,59 +29,21 @@
 </template>
 
 <script>
-	import reqwest from 'reqwest';
-	import api from '../fetch/api';	
+	import { mapGetters, mapActions } from 'vuex';
 
 	export default {
-		data () {
-			return {
-				userData: {
-					avatar_url: '',
-					loginname: '',
-					recent_replies: [
-						{
-							author: {
-								avatar_url: '',
-								loginname: ''
-							},
-							id: '',
-							last_reply_at: '',
-							title: ''
-						}
-					],
-					recent_topics: [
-						{
-							author: {
-								avatar_url: '',
-								loginname: ''
-							},
-							id: '',
-							last_reply_at: '',
-							title: ''
-						}
-					]
-				}
-			}
-		},
 		created () {
-			this.getUserInfo();
+			this.getData();
+		},
+		computed: {
+			...mapGetters(['userData'])
 		},
 		methods: {
-			getUserInfo() {
+			...mapActions(['getUserData']),
+			getData() {
 				var self = this;
 				var name = this.$route.params.loginname;
-				var url = api.getUser(name);
-				reqwest({
-					url: url,
-					method: 'get'
-				})
-				.then(res => {
-					console.log(res);
-					self.userData = res.data;
-				})
-				.fail(err => {
-					console.log(err);
-				})
+				this.getUserData(name);
 			},
 			enterDetail (id) {
 				this.$router.push({name: 'detail', params: {id: id}});
