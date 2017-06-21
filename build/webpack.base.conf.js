@@ -25,9 +25,6 @@ module.exports = {
       '@': resolve('src'),
     }
   },
-  externals: {
-    'reqwest': 'reqwest'
-  },
   module: {
     rules: [
       {
